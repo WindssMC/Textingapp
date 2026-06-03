@@ -1,0 +1,30 @@
+name: Generate package-lock
+on:
+  workflow_dispatch:
+
+jobs:
+  generate-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies (generate lockfile)
+        run: npm install
+
+      - name: Commit package-lock.json (if changed)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git status --porcelain | grep -q "package-lock.json"; then
+            git add package-lock.json
+            git commit -m "chore(ci): add package-lock.json [skip ci]"
+            git push origin HEAD:main
+          else
+            echo "No changes to package-lock.json"
+          fi
